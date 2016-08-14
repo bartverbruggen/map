@@ -176,18 +176,20 @@
     drawCircle: function(coords) {
       var currentLatLng = new google.maps.LatLng(coords.latitude, coords.longitude);
       if (app.radiusCircle) {
-        app.radiusCircle.setMap(null);
+        app.radiusCircle.setRadius(app._getCurrentRadius());
+        // app.radiusCircle.setMap(null);
+      } else {
+        app.radiusCircle = new google.maps.Circle({
+          strokeColor: '#F1475C',
+          strokeOpacity: 0.8,
+          strokeWeight: 2,
+          fillColor: '#F1475C',
+          fillOpacity: 0.3,
+          map: app._googleMaps.map,
+          center: currentLatLng,
+          radius: app._getCurrentRadius()
+        });
       }
-      app.radiusCircle = new google.maps.Circle({
-        strokeColor: '#F1475C',
-        strokeOpacity: 0.8,
-        strokeWeight: 3,
-        fillColor: '#F1475C',
-        fillOpacity: 0.3,
-        map: app._googleMaps.map,
-        center: currentLatLng,
-        radius: app._getCurrentRadius()
-      });
       app._googleMaps.map.setCenter(currentLatLng);
     }
   };
@@ -199,7 +201,9 @@
     var geoSuccess = function(position) {
       currentPosition = position.coords;
       app._googleMaps.drawCircle(position.coords);
-      callback();
+      if (_.isFunction(callback)) {
+        callback();
+      }
     };
     var geoError = function(error) {
       console.log('Error occurred. Error code: ' + error.code);
@@ -229,6 +233,7 @@
         e.preventDefault();
         app._setCurrentLocation(function() {
           toastGeo.classList.add('hidden');
+          setTimeout(app._setCurrentLocation, 2000);
         });
       }
     });
@@ -239,3 +244,8 @@
 
   app._googleMaps.init();
 })();
+
+var _ = {};
+_.isFunction = function(obj) {
+  return !!(obj && obj.constructor && obj.call && obj.apply);
+};
